@@ -11,7 +11,7 @@ struct DomTree {
   void init(int _n) {
     n = _n;
     FOR1(i, n) G[i].clear(), rG[i].clear(),
-      bkt[i].clear(), dfn[i] = 0, idom[i] = 0;
+      dfn[i] = 0, idom[i] = 0;
     T = 0;
   }
   void add_edge(int x, int y) {
@@ -21,17 +21,14 @@ struct DomTree {
   void build(int s) {
     dfs0(s);
     static int idom[N];
-    FOR1(i, T) label[i] = i, sdom[i] = i, dsu[i] = i;
+    FOR1(i, T) bkt[i].clear(), label[i] = i, sdom[i] = i, dsu[i] = i;
     for(int i=T;i>=2;i--) {
-      for(int u: rG[i]) {
-        eval(u);
-        miz(sdom[i], sdom[label[u]]);
-      }
+      for(int u: rG[i])
+        miz(sdom[i], sdom[eval(u)]);
       bkt[sdom[i]].pb(i);
       dsu[i] = par[i]; // link(i, par[i]);
       for(int v: bkt[par[i]]) {
-        eval(v);
-        int u = label[v];
+        const int u = eval(v);
         if(sdom[u] < sdom[v]) idom[v] = u;
         else idom[v] = sdom[v];
       }
@@ -45,9 +42,10 @@ struct DomTree {
   }
 
   // private area
-  int eval(int x) {
+  inline int eval(int x) { compress(x); return label[x]; }
+  int compress(int x) {
     if(dsu[x] == x) return x;
-    int ret = eval(dsu[x]);
+    int ret = compress(dsu[x]);
     if(sdom[label[dsu[x]]] < sdom[label[x]])
       label[x] = label[dsu[x]];
     return dsu[x] = ret;
